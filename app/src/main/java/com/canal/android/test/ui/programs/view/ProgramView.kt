@@ -2,11 +2,10 @@ package com.canal.android.test.ui.programs.view
 
 import android.content.Context
 import android.util.AttributeSet
-import android.view.View
+import android.view.LayoutInflater
 import androidx.cardview.widget.CardView
 import com.bumptech.glide.Glide
-import com.canal.android.test.R
-import kotlinx.android.synthetic.main.layout_program.view.*
+import com.canal.android.test.databinding.LayoutProgramBinding
 
 class ProgramView @JvmOverloads constructor(
     context: Context,
@@ -14,8 +13,9 @@ class ProgramView @JvmOverloads constructor(
     defStyleAttr: Int = 0
 ) : CardView(context, attrs, defStyleAttr) {
 
+    private var binding : LayoutProgramBinding = LayoutProgramBinding.inflate(LayoutInflater.from(context), this, true)
+
     init {
-        View.inflate(context, R.layout.layout_program, this)
         layoutParams = LayoutParams(
             LayoutParams.MATCH_PARENT,
             LayoutParams.WRAP_CONTENT
@@ -29,20 +29,20 @@ class ProgramView @JvmOverloads constructor(
         urlImage: String,
         urlLogoChannel: String?
     ) {
-        program_title.text = title
+        binding.programTitle.text = title
 
-        program_subtitle.text = subtitle
+        binding.programSubtitle.text = subtitle
 
         Glide.with(this)
             .load(urlImage)
             .centerCrop()
-            .into(program_image)
+            .into(binding.programImage)
 
         urlLogoChannel?.let { url ->
             Glide.with(this)
                 .load(url)
                 .fitCenter()
-                .into(program_channel_image)
+                .into(binding.programChannelImage)
         }
     }
 }
