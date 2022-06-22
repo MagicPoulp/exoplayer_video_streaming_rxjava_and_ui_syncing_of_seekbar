@@ -5,12 +5,10 @@ import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import androidx.fragment.app.Fragment
-import androidx.lifecycle.Observer
 import androidx.recyclerview.widget.LinearLayoutManager
-import com.canal.android.test.R
+import com.canal.android.test.databinding.FragmentProgramsBinding
 import com.canal.android.test.ui.programs.view.adapter.ProgramsAdapter
 import com.canal.android.test.ui.programs.view.adapter.ProgramsDecorator
-import kotlinx.android.synthetic.main.fragment_programs.*
 import org.koin.androidx.viewmodel.ext.android.viewModel
 
 class ProgramsFragment : Fragment() {
@@ -18,25 +16,34 @@ class ProgramsFragment : Fragment() {
     private val viewModel: ProgramsViewModel by viewModel()
     private val recyclerAdapter = ProgramsAdapter()
 
+    private var _binding: FragmentProgramsBinding? = null
+    private val binding get() = _binding!!
+
     override fun onCreateView(
         inflater: LayoutInflater,
         container: ViewGroup?,
         savedInstanceState: Bundle?
     ): View? {
-        return inflater.inflate(R.layout.fragment_programs, container, false)
+        _binding = FragmentProgramsBinding.inflate(inflater, container, false)
+        return binding.root
     }
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
 
-        programs_recycler.apply {
+        binding.programsRecycler.apply {
             layoutManager = LinearLayoutManager(view.context)
             adapter = recyclerAdapter
             addItemDecoration(ProgramsDecorator(view.context))
         }
 
-        viewModel.uiData.observe(viewLifecycleOwner, Observer { pageProgramsUi ->
+        viewModel.uiData.observe(viewLifecycleOwner) { pageProgramsUi ->
             recyclerAdapter.submitList(pageProgramsUi.programs)
-        })
+        }
+    }
+
+    override fun onDestroyView() {
+        super.onDestroyView()
+        _binding = null
     }
 }
