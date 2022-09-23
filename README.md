@@ -1,9 +1,11 @@
+English version [HERE](README-EN.md)
+
 # Test Technique myCANAL Android
 
 Ce test se déroulera en 3 parties:
-1- Afficher la page détail d'un programme
-2- Lire un flux video en clair
-3- Faire des retours sur le code
+1. Afficher la page détail d'un programme
+2. Lire un flux video en clair
+3. Faire des retours sur le code
 
 
 Prenez le temps que vous souhaitez pour réaliser ce test technique et n'hésitez pas à nous contacter pour toute question.
