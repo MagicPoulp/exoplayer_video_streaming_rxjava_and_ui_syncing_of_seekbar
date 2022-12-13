@@ -25,6 +25,6 @@ class ProgramsViewModel(
                     postUiData(pageProgramsUi)
                 },
                 onError = {}
-            )
+            ).autoDispose()
     }
 }

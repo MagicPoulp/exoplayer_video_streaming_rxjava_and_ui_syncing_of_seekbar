@@ -8,4 +8,12 @@
         android:id="@+id/fragment_programs"
         android:name="com.canal.android.test.ui.programs.ProgramsFragment" />
 
+    <fragment
+        android:id="@+id/fragment_detail_page"
+        android:name="com.canal.android.test.ui.detailpage.DetailPageFragment" />
+
+    <fragment
+        android:id="@+id/fragment_player"
+        android:name="com.canal.android.test.ui.player.PlayerFragment" />
+
 </navigation>

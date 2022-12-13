@@ -5,10 +5,10 @@ import com.canal.android.test.domain.model.Program
 import io.reactivex.Single
 
 class GetProgramsUseCase(
-    private val repository: Repository
-) {
+        private val repository: Repository
+) : () -> Single<List<Program>> {
 
-    operator fun invoke(): Single<List<Program>> {
+    override operator fun invoke(): Single<List<Program>> {
         return repository.getPrograms(URL)
     }
 

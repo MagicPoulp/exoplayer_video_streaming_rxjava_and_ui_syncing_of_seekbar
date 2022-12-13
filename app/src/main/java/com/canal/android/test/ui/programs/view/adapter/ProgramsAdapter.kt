@@ -4,27 +4,34 @@ import android.view.ViewGroup
 import androidx.recyclerview.widget.DiffUtil
 import androidx.recyclerview.widget.ListAdapter
 import androidx.recyclerview.widget.RecyclerView
+import com.canal.android.test.domain.model.NavigateTo
 import com.canal.android.test.ui.programs.model.ProgramUi
 import com.canal.android.test.ui.programs.view.ProgramView
 
-class ProgramsAdapter : ListAdapter<ProgramUi, ProgramsAdapter.ViewHolder>(diffCallback) {
+class ProgramsAdapter(
+        private val navigateTo: (NavigateTo) -> Unit
+) : ListAdapter<ProgramUi, ProgramsAdapter.ViewHolder>(diffCallback) {
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): ViewHolder {
         return ViewHolder(
-            ProgramView(
-                parent.context
-            )
+                ProgramView(
+                        parent.context
+                )
         )
     }
 
     override fun onBindViewHolder(holder: ViewHolder, position: Int) {
         val programUi = getItem(position)
-        (holder.itemView as ProgramView).setData(
-            title = programUi.title,
-            subtitle = programUi.subtitle,
-            urlImage = programUi.urlImage,
-            urlLogoChannel = programUi.urlLogoChannel
+        val programView = (holder.itemView as ProgramView)
+        programView.setData(
+                title = programUi.title,
+                subtitle = programUi.subtitle,
+                urlImage = programUi.urlImage,
+                urlLogoChannel = programUi.urlLogoChannel
         )
+        programView.setOnClickListener {
+            navigateTo(programUi.navigateTo)
+        }
     }
 
     class ViewHolder(view: ProgramView) : RecyclerView.ViewHolder(view)
