@@ -43,12 +43,12 @@ android {
 dependencies {
     implementation fileTree(dir: 'libs', include: ['*.jar'])
 
+    implementation project(":player")
+
     // Tests
     testImplementation "junit:junit:$versions.junit"
     androidTestImplementation "androidx.test.ext:junit:$versions.androidx.test_ext_junit"
     androidTestImplementation "androidx.test.espresso:espresso-core:$versions.androidx.espresso"
-
-    implementation "org.jetbrains.kotlin:kotlin-stdlib-jdk7:$versions.kotlin"
 
     // AndroidX
     implementation "androidx.appcompat:appcompat:$versions.androidx.appcompat"

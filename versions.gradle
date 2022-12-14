@@ -2,38 +2,40 @@
 // Access to all versions in build.gradle files
 //
 
-def compile_sdk_version = 31
-def target_sdk_version = 31
+def compile_sdk_version = 33
+def target_sdk_version = 33
 def min_sdk_version = 21
 
 def android = [:]
 android.gradle_experimental = "0.11.1"
-android.gradle_tools = '7.0.4'
+android.gradle_tools = '7.1.0'
 
 def androidx = [:]
-androidx.appcompat = "1.4.1"
+androidx.appcompat = "1.5.1"
 androidx.cardview = "1.0.0"
-androidx.constraintlayout = "2.1.3"
-androidx.core_ktx = "1.7.0"
-androidx.espresso = "3.4.0"
-androidx.navigation = "2.3.5"
-androidx.test_ext_junit = "1.1.3"
+androidx.constraintlayout = "2.1.4"
+androidx.core_ktx = "1.9.0"
+androidx.espresso = "3.5.0"
+androidx.navigation = "2.5.3"
+androidx.test_ext_junit = "1.1.4"
 
 def rx = [:]
 rx.android = "2.1.1"
 rx.binding = "2.2.0"
 rx.kotlin = "2.4.0"
 
-def kotlin = "1.6.10"
+def kotlin = "1.7.20"
 
 def koin = "3.1.5"
 
-def okhttp = "4.9.3"
+def okhttp = "4.10.0"
 def retrofit = "2.9.0"
 
 def glide = "4.12.0"
 
 def junit = "4.13.2"
+
+def media3 = "1.0.1"
 
 def moshi = [:]
 moshi.kotlin = "1.13.0"
@@ -52,4 +54,4 @@ ext.versions.glide = glide
 ext.versions.okhttp = okhttp
 ext.versions.moshi = moshi
 ext.versions.junit = junit
-
+ext.versions.media3 = media3

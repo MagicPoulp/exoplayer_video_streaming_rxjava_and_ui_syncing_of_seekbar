@@ -7,6 +7,7 @@ import android.view.ViewGroup
 import androidx.recyclerview.widget.LinearLayoutManager
 import com.canal.android.test.databinding.FragmentProgramsBinding
 import com.canal.android.test.ui.common.BaseFragment
+import com.canal.android.test.ui.common.exitFullScreen
 import com.canal.android.test.ui.programs.model.PageProgramsUi
 import com.canal.android.test.ui.programs.view.adapter.ProgramsAdapter
 import com.canal.android.test.ui.programs.view.adapter.ProgramsDecorator

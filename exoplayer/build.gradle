@@ -1,0 +1,51 @@
+apply plugin: 'com.android.library'
+apply plugin: 'kotlin-android'
+apply plugin: 'kotlin-parcelize'
+apply plugin: 'kotlin-kapt'
+
+android {
+    namespace 'com.canal.android.test.exoplayer'
+    compileSdkVersion versions.compile_sdk_version
+
+    defaultConfig {
+        minSdkVersion versions.min_sdk_version
+        targetSdkVersion versions.target_sdk_version
+        versionCode 1
+        versionName "1.0"
+
+        testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
+    }
+
+    buildTypes {
+        release {
+            minifyEnabled false
+        }
+    }
+    compileOptions {
+        sourceCompatibility JavaVersion.VERSION_1_8
+        targetCompatibility JavaVersion.VERSION_1_8
+    }
+    kotlinOptions {
+        jvmTarget = '1.8'
+    }
+}
+
+dependencies {
+
+    // Android X
+    implementation "androidx.core:core-ktx:$versions.androidx.core_ktx"
+    implementation "androidx.appcompat:appcompat:$versions.androidx.appcompat"
+
+    // Rxjava
+    implementation "io.reactivex.rxjava2:rxandroid:$versions.rx.android"
+    implementation "io.reactivex.rxjava2:rxkotlin:$versions.rx.kotlin"
+
+    // Media3 (exoplayer)
+    implementation "androidx.media3:media3-exoplayer:$versions.media3"
+    implementation "androidx.media3:media3-exoplayer-dash:$versions.media3"
+    implementation "androidx.media3:media3-exoplayer-hls:$versions.media3"
+
+    testImplementation "junit:junit:$versions.junit"
+    androidTestImplementation "androidx.test.ext:junit:$versions.androidx.test_ext_junit"
+    androidTestImplementation "androidx.test.espresso:espresso-core:$versions.androidx.espresso"
+}
