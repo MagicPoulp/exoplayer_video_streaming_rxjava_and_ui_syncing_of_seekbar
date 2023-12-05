@@ -22,16 +22,41 @@ class PlayerFragment : BaseFragment<MediaUi, FragmentPlayerBinding>() {
         get() = FragmentPlayerBinding::inflate
 
     private var player: Player? = null
+    private var previousPlayerPosition: Long = 0
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
         activity.setFullScreen()
 
+        initPlayer()
+        savedInstanceState?.getLong("previousPlayerPosition", 0)?.let { previousPlayerPosition = it }
+    }
+
+    // Question 1.7 Respect playerFragment lifeCycle (player should be released onStop, and should playback at previous position at onStart)
+    override fun onStart() {
+        super.onStart()
+        player?.pushAction(PlayerAction.SeekTo(seekToPositionMs = previousPlayerPosition))
         viewModel.uiData.observe(viewLifecycleOwner) { mediaUi ->
             player?.pushAction(PlayerAction.StartPlayback(mediaUi.manifestUrl))
         }
+    }
 
-        initPlayer()
+    override fun onSaveInstanceState(outState: Bundle) {
+        // API 28+ has onStop() after onSaveInstanceState(), otherwise it is before
+        if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.P) {
+            previousPlayerPosition = 0 // TODO get the current position
+        }
+        outState.putLong("previousPlayerPosition", previousPlayerPosition)
+        super.onSaveInstanceState(outState)
+    }
+
+    override fun onStop() {
+        super.onStop()
+        // API 28+ has onStop() after onSaveInstanceState(), otherwise it is before
+        if (android.os.Build.VERSION.SDK_INT < android.os.Build.VERSION_CODES.P) {
+            previousPlayerPosition = 0 // TODO get the current position
+        }
+        player?.pushAction(PlayerAction.Release)
     }
 
     private fun initPlayer() {
