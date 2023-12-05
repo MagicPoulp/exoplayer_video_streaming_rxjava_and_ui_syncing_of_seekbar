@@ -41,6 +41,7 @@ dependencies {
     // Rxjava
     implementation "io.reactivex.rxjava2:rxandroid:$versions.rx.android"
     implementation "io.reactivex.rxjava2:rxkotlin:$versions.rx.kotlin"
+    implementation project(path: ':common')
 
     testImplementation "junit:junit:$versions.junit"
     androidTestImplementation "androidx.test.ext:junit:$versions.androidx.test_ext_junit"

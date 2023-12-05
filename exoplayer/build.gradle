@@ -44,6 +44,7 @@ dependencies {
     implementation "androidx.media3:media3-exoplayer:$versions.media3"
     implementation "androidx.media3:media3-exoplayer-dash:$versions.media3"
     implementation "androidx.media3:media3-exoplayer-hls:$versions.media3"
+    implementation project(path: ':common')
 
     testImplementation "junit:junit:$versions.junit"
     androidTestImplementation "androidx.test.ext:junit:$versions.androidx.test_ext_junit"

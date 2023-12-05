@@ -1,6 +1,7 @@
 package com.canal.android.test.exoplayer
 
 import android.view.SurfaceView
+import com.canal.android.test.common.PlayerRatio
 import com.canal.android.test.exoplayer.model.PlayerState
 import io.reactivex.Completable
 import io.reactivex.Observable
@@ -14,5 +15,5 @@ interface PlayerCore {
     fun selectTrack(trackType: Int, trackGroupIndex: Int, trackIndex: Int): Completable
     fun setPlayerView(surfaceView: SurfaceView): Completable
 
-    fun startPlayback(manifestUrl: String): Observable<PlayerState>
+    fun startPlayback(manifestUrl: String, callbackOnVideoSizeChanged: ((PlayerRatio) -> Unit)?): Observable<PlayerState>
 }

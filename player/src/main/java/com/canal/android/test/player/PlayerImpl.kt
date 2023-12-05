@@ -3,6 +3,7 @@ package com.canal.android.test.player
 import android.content.Context
 import android.util.Log
 import android.view.SurfaceView
+import com.canal.android.test.common.PlayerRatio
 import com.canal.android.test.exoplayer.PlayerCoreImpl
 import com.canal.android.test.exoplayer.PlayerFactory
 import com.canal.android.test.player.model.PlayerAction
@@ -54,18 +55,18 @@ class PlayerImpl(
 
     private fun PlayerAction.handle(): Completable =
         when (this) {
-            is PlayerAction.StartPlayback -> startPlayback(this.manifestUrl)
+            is PlayerAction.StartPlayback -> startPlayback(this.manifestUrl, this.callbackOnVideoSizeChanged)
             is PlayerAction.Release -> releasePlayer()
             // TODO handle all other actions
             else -> Completable.complete()
         }
 
 
-    private fun startPlayback(manifestUrl: String): Completable =
+    private fun startPlayback(manifestUrl: String, callbackOnVideoSizeChanged: ((PlayerRatio) -> Unit)?): Completable =
         playerSubject.switchMapCompletable { player ->
             player.setPlayerView(playerView)
                 .andThen(
-                    player.startPlayback(manifestUrl)
+                    player.startPlayback(manifestUrl, callbackOnVideoSizeChanged)
                         .ignoreElements()
                 )
         }

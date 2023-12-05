@@ -1,5 +1,8 @@
 package com.canal.android.test.ui.player
 
+import androidx.lifecycle.LiveData
+import androidx.lifecycle.MutableLiveData
+import com.canal.android.test.common.PlayerRatio
 import com.canal.android.test.domain.model.NavigateTo
 import com.canal.android.test.domain.usecase.GetMediaUseCase
 import com.canal.android.test.ui.common.BaseViewModel
@@ -8,6 +11,7 @@ import com.canal.android.test.ui.player.model.MediaUi
 import io.reactivex.android.schedulers.AndroidSchedulers
 import io.reactivex.rxkotlin.subscribeBy
 import io.reactivex.schedulers.Schedulers
+import io.reactivex.subjects.BehaviorSubject
 
 class PlayerViewModel(
         navigateTo: NavigateTo.QuickTime,
@@ -28,5 +32,12 @@ class PlayerViewModel(
                         },
                         onError = {}
                 ).autoDispose()
+    }
+
+    private val _playerRatio = MutableLiveData<PlayerRatio>()
+    val playerRatio: LiveData<PlayerRatio>
+        get() = _playerRatio
+    public fun postPlayerRatio(ratio: PlayerRatio) {
+        _playerRatio.value = ratio
     }
 }

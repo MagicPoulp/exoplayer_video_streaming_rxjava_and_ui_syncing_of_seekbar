@@ -8,11 +8,13 @@ import androidx.media3.common.Player.STATE_BUFFERING
 import androidx.media3.common.Player.STATE_ENDED
 import androidx.media3.common.Player.STATE_IDLE
 import androidx.media3.common.Player.STATE_READY
+import androidx.media3.common.VideoSize
 import androidx.media3.common.util.UnstableApi
 import androidx.media3.datasource.DefaultHttpDataSource
 import androidx.media3.exoplayer.DefaultRenderersFactory
 import androidx.media3.exoplayer.ExoPlayer
 import androidx.media3.exoplayer.analytics.AnalyticsListener
+import com.canal.android.test.common.PlayerRatio
 import com.canal.android.test.exoplayer.model.PlayerState
 import com.canal.android.test.exoplayer.model.PlayerStatus
 import io.reactivex.Completable
@@ -41,6 +43,8 @@ import java.util.concurrent.TimeUnit
     private val errorListener: PlayerErrorListener by lazy {
         PlayerErrorListener { exception -> _stateSubject.onError(exception) }
     }
+
+    private var callbackOnVideoSizeChanged: ((PlayerRatio) -> Unit)? = null
 
     private val listener: AnalyticsListener by lazy {
         object : AnalyticsListener {
@@ -82,6 +86,14 @@ import java.util.concurrent.TimeUnit
                     )
                 }
             }
+
+            override fun onVideoSizeChanged(
+                eventTime: AnalyticsListener.EventTime,
+                videoSize: VideoSize
+            ) {
+                super.onVideoSizeChanged(eventTime, videoSize)
+                callbackOnVideoSizeChanged?.let { it(PlayerRatio(videoSize.width, videoSize.height)) }
+            }
         }
     }
 
@@ -108,7 +120,7 @@ import java.util.concurrent.TimeUnit
             player.setVideoSurfaceView(surfaceView)
         }.subscribeOn(AndroidSchedulers.mainThread())
 
-    override fun startPlayback(manifestUrl: String): Observable<PlayerState> =
+    override fun startPlayback(manifestUrl: String, callbackOnVideoSizeChanged: ((PlayerRatio) -> Unit)?): Observable<PlayerState> =
         Single.fromCallable {
             MediaSourceFactory.buildMediaSource(
                 Uri.parse(manifestUrl),
@@ -116,6 +128,7 @@ import java.util.concurrent.TimeUnit
             )
         }.flatMapCompletable { mediaSource ->
             Completable.fromAction {
+                this.callbackOnVideoSizeChanged = callbackOnVideoSizeChanged
                 player.addAnalyticsListener(listener)
                 player.addAnalyticsListener(errorListener)
                 player.setMediaSource(mediaSource)
