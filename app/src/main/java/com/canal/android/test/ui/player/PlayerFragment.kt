@@ -38,7 +38,21 @@ class PlayerFragment : BaseFragment<MediaUi, FragmentPlayerBinding>() {
         activity.setFullScreen()
         savedInstanceState?.getLong("previousPlayerPosition", 0)?.let { previousPlayerPosition = it }
 
-        val simpleSeekBar: SeekBar? = activity?.findViewById(R.id.seek_bar)
+        // Question 1.4 Seeking the thumb of seekBar seeks the stream at correct position
+        val seekBar: SeekBar? = activity?.findViewById(R.id.seek_bar)
+        seekBar?.setOnSeekBarChangeListener(object :
+            SeekBar.OnSeekBarChangeListener {
+            override fun onProgressChanged(seekBar: SeekBar?, progress: Int, fromUser: Boolean) {
+            }
+
+            override fun onStartTrackingTouch(seekBar: SeekBar?) {
+            }
+
+            override fun onStopTrackingTouch(seek: SeekBar) {
+                    player?.pushAction(PlayerAction.SeekTo(seek.progress.toLong()))
+                }
+            }
+        )
 
         initPlayer()
         viewModel.uiData.observe(viewLifecycleOwner) { mediaUi ->
