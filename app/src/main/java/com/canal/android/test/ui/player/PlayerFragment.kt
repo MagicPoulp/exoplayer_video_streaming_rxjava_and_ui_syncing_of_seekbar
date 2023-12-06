@@ -48,7 +48,6 @@ class PlayerFragment : BaseFragment<MediaUi, FragmentPlayerBinding>() {
         get() = FragmentPlayerBinding::inflate
 
     private var player: Player? = null
-    private var mediaUrlForRestart: String? = null
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
@@ -72,9 +71,6 @@ class PlayerFragment : BaseFragment<MediaUi, FragmentPlayerBinding>() {
                 }
             }
         )
-        //title
-        //subtitle
-        //urlImage
         initPlayer()
         viewModel.uiData.observe(viewLifecycleOwner) { mediaUi ->
             viewModel.postMediaDetail(MediaDetailShort(

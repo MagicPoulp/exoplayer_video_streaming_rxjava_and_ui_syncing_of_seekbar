@@ -106,22 +106,19 @@ import java.util.concurrent.TimeUnit
     }
 
     private fun startPlayerPositionUpdate() {
-        println("DB startPlayerPositionUpdate start")
         // Completable.fromObservable(, toOb
         val disposable = Observable.interval(1L, TimeUnit.SECONDS)
             .observeOn(AndroidSchedulers.mainThread())
             .map {
-                println("DB new")
                 currentState.copy(
                     position = player.currentPosition,
                     durationMs = player.duration
                 )
             }
             .doOnSubscribe { player.play() }
-            .doOnDispose { println("DB DISPOSE")
+            .doOnDispose {
                 Handler(Looper.getMainLooper()).post { player.release() } }
             .subscribe({
-                println("DB new2")
                 _stateSubject.onNext(it)
             }, {
                 _stateSubject.onError(it)
@@ -159,17 +156,13 @@ import java.util.concurrent.TimeUnit
                     player.seekTo(seekToPositionMs)
                 }
                 player.playWhenReady = false
-                println("DB PLAYER SETUP")
                 startPlayerPositionUpdate()
             }.subscribeOn(AndroidSchedulers.mainThread())
-            //    .doOnDispose { println("DB DISPOSE2") }
             val localDisposable1 = completable1.subscribe()
             localDisposable1?.let { compositeDisposable.add(it) }
             longDisposable1 = localDisposable1
-            println("DB STEP 3")
             Completable.complete()
         }
-            .doOnDispose { println("DB DISPOSE4") }
             .andThen(_stateSubject)
             .subscribeOn(AndroidSchedulers.mainThread())
 
@@ -206,11 +199,7 @@ import java.util.concurrent.TimeUnit
     }
 
     override fun release(): Completable {
-        println("DB EXO RELEASE")
         compositeDisposable.dispose()
-        //player.playWhenReady = false
-        //player.pause()
-        //player.stop()
         player.release()
         return Completable.complete()
     }

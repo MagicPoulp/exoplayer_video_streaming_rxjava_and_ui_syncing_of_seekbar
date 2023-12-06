@@ -129,10 +129,8 @@ class PlayerImpl(
 
     private fun releasePlayer(blockRestart: Boolean?): Completable =
         playerSubject.flatMapCompletable { player ->
-            println("DB RELEASE")
             this.blockRestart = true
             compositeDisposable.dispose()
-            println("DB RELEASE2")
             player.release()
         }
 
