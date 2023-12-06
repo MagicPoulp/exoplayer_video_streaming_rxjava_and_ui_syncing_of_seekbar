@@ -67,7 +67,7 @@ class PlayerImpl(
             is PlayerAction.StopPlayback -> stopPlayback()
             is PlayerAction.Release -> releasePlayer()
             is PlayerAction.SelectTrack -> selectTrack(this.trackType, this.trackGroupIndex, this.trackIndex)
-            is PlayerAction.StartPlayback -> startPlayback(this.manifestUrl, this.callbackOnVideoSizeChanged)
+            is PlayerAction.StartPlayback -> startPlayback(this.manifestUrl, this.callbackOnVideoSizeChanged, this.seekToPositionMs)
             else -> Completable.complete()
         }
 
@@ -99,11 +99,11 @@ class PlayerImpl(
             player.selectTrack(trackType = trackType, trackGroupIndex = trackGroupIndex, trackIndex = trackIndex)
         }
 
-    private fun startPlayback(manifestUrl: String, callbackOnVideoSizeChanged: ((PlayerRatio) -> Unit)?): Completable =
+    private fun startPlayback(manifestUrl: String, callbackOnVideoSizeChanged: ((PlayerRatio) -> Unit)?, seekToPositionMs: Long?): Completable =
         playerSubject.switchMapCompletable { player ->
             player.setPlayerView(playerView)
                 .andThen(
-                    player.startPlayback(manifestUrl, callbackOnVideoSizeChanged)
+                    player.startPlayback(manifestUrl, callbackOnVideoSizeChanged, seekToPositionMs)
                         .ignoreElements()
                 )
         }

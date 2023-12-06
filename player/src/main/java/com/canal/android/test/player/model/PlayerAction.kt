@@ -12,5 +12,5 @@ sealed class PlayerAction {
     data class SelectTrack(val trackType: Int, val trackGroupIndex: Int, val trackIndex: Int) :
         PlayerAction()
 
-    data class StartPlayback(val manifestUrl: String, val callbackOnVideoSizeChanged: ((PlayerRatio) -> Unit)?) : PlayerAction()
+    data class StartPlayback(val manifestUrl: String, val callbackOnVideoSizeChanged: ((PlayerRatio) -> Unit)?, val seekToPositionMs: Long?) : PlayerAction()
 }

@@ -123,7 +123,7 @@ import java.util.concurrent.TimeUnit
             player.setVideoSurfaceView(surfaceView)
         }.subscribeOn(AndroidSchedulers.mainThread())
 
-    override fun startPlayback(manifestUrl: String, callbackOnVideoSizeChanged: ((PlayerRatio) -> Unit)?): Observable<PlayerState> =
+    override fun startPlayback(manifestUrl: String, callbackOnVideoSizeChanged: ((PlayerRatio) -> Unit)?, seekToPositionMs: Long?): Observable<PlayerState> =
         Single.fromCallable {
             MediaSourceFactory.buildMediaSource(
                 Uri.parse(manifestUrl),
@@ -135,8 +135,14 @@ import java.util.concurrent.TimeUnit
                 player.addAnalyticsListener(listener)
                 player.addAnalyticsListener(errorListener)
                 player.setMediaSource(mediaSource)
-                player.playWhenReady = true
                 player.prepare()
+                seekToPositionMs?.let {
+                    // we must use 2 parameters because we have COMMAND_SEEK_TO_MEDIA_ITEM but not COMMAND_SEEK_IN_CURRENT_MEDIA_ITEM
+                    // see the source code documentation for details
+                    // However, it enforces the first mediaItemIndex
+                    player.seekTo(0, seekToPositionMs)
+                }
+                player.playWhenReady = true
                 startPlayerPositionUpdate()
             }.subscribeOn(AndroidSchedulers.mainThread())
         }
@@ -151,6 +157,7 @@ import java.util.concurrent.TimeUnit
 
     private fun play(): Completable {
         startPlayerPositionUpdate()
+        player.play()
         return Completable.complete()
     }
 
@@ -182,7 +189,12 @@ import java.util.concurrent.TimeUnit
     }
 
     override fun seekTo(positionMs: Long): Completable {
-        player.seekTo(positionMs)
+        pause()
+        // we must use 2 parameters because we have COMMAND_SEEK_TO_MEDIA_ITEM but not COMMAND_SEEK_IN_CURRENT_MEDIA_ITEM
+        // see the source code documentation for details
+        // However, it enforces the first mediaItemIndex
+        player.seekTo(0, positionMs)
+        play()
         return Completable.complete()
     }
 

@@ -38,7 +38,7 @@ class PlayerFragment : BaseFragment<MediaUi, FragmentPlayerBinding>() {
         viewModel.uiData.observe(viewLifecycleOwner) { mediaUi ->
             mediaUrlForRestart = mediaUi.manifestUrl
             // NOT DONE: if the ratio cannot be parsed from the url, we could report an error dialog and abort playing
-            // We set the ratio manually so that it is intially correct without a visible tearing glitch
+            // We set the ratio manually so that it is initially correct without a visible tearing glitch
             val ratio = getRatioFromUrl(mediaUi.manifestUrl)
             ratio?.let {
                 viewModel.postPlayerRatio(it)
@@ -46,7 +46,7 @@ class PlayerFragment : BaseFragment<MediaUi, FragmentPlayerBinding>() {
             val callbackOnVideoSizeChanged: (PlayerRatio) -> Unit = { it ->
                 viewModel.postPlayerRatio(it)
             }
-            player?.pushAction(PlayerAction.StartPlayback(mediaUi.manifestUrl, callbackOnVideoSizeChanged))
+            player?.pushAction(PlayerAction.StartPlayback(mediaUi.manifestUrl, callbackOnVideoSizeChanged, null))
         }
 
         viewModel.playerRatio.observe(viewLifecycleOwner) { ratio ->
@@ -68,8 +68,11 @@ class PlayerFragment : BaseFragment<MediaUi, FragmentPlayerBinding>() {
             val callbackOnVideoSizeChanged: (PlayerRatio) -> Unit = { it ->
                 viewModel.postPlayerRatio(it)
             }
-            player?.pushAction(PlayerAction.StartPlayback(it, callbackOnVideoSizeChanged))
-            player?.pushAction(PlayerAction.SeekTo(seekToPositionMs = previousPlayerPosition))
+            player?.pushAction(PlayerAction.StartPlayback(
+                manifestUrl = it,
+                callbackOnVideoSizeChanged = callbackOnVideoSizeChanged,
+                seekToPositionMs = previousPlayerPosition)
+            )
         }
     }
 

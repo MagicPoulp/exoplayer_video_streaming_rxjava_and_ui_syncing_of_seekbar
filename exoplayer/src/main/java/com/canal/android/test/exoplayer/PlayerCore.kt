@@ -16,5 +16,5 @@ interface PlayerCore {
     fun selectTrack(trackType: Int, trackGroupIndex: Int, trackIndex: Int): Completable
     fun setPlayerView(surfaceView: SurfaceView): Completable
 
-    fun startPlayback(manifestUrl: String, callbackOnVideoSizeChanged: ((PlayerRatio) -> Unit)?): Observable<PlayerState>
+    fun startPlayback(manifestUrl: String, callbackOnVideoSizeChanged: ((PlayerRatio) -> Unit)?, seekToPositionMs: Long?): Observable<PlayerState>
 }
