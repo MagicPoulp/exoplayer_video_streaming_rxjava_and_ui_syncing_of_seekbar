@@ -1,6 +1,5 @@
 package com.canal.android.test.player
 
-import android.annotation.SuppressLint
 import android.content.Context
 import android.util.Log
 import android.view.SurfaceView
@@ -15,7 +14,6 @@ import io.reactivex.Single
 import io.reactivex.android.schedulers.AndroidSchedulers
 import io.reactivex.disposables.CompositeDisposable
 import io.reactivex.disposables.Disposable
-import io.reactivex.schedulers.Schedulers
 import io.reactivex.subjects.BehaviorSubject
 import io.reactivex.subjects.ReplaySubject
 
@@ -39,7 +37,9 @@ class PlayerImpl(
     init {
         observePlayerActions()
         initializePlayer()
-            .subscribeOn(Schedulers.io())
+            // We set the main thread here because the player commands must be run on the main
+            // thread. It depends on how the ExoPlayer was instantiated with a Looper.
+            .observeOn(AndroidSchedulers.mainThread())
             .subscribe({ player ->
                 playerSubject.onNext(player)
             }, { throwable ->
@@ -53,7 +53,7 @@ class PlayerImpl(
                 action.handle()
             }
             // Question 1.3 the player must be used from the same thread has the looper set in PlayerCoreImpl
-            .subscribeOn(AndroidSchedulers.mainThread())
+            .observeOn(AndroidSchedulers.mainThread())
             .subscribe()
             .autoDispose()
     }
@@ -68,7 +68,8 @@ class PlayerImpl(
             is PlayerAction.StopPlayback -> stopPlayback()
             is PlayerAction.Release -> releasePlayer()
             is PlayerAction.SelectTrack -> selectTrack(this.trackType, this.trackGroupIndex, this.trackIndex)
-            is PlayerAction.StartPlayback -> startPlayback(this.manifestUrl, this.callbackOnVideoSizeChanged, this.seekToPositionMs, this.callbackOnPositionStateChanged)
+            is PlayerAction.StartPlayback -> startPlayback(this.manifestUrl, this.callbackOnVideoSizeChanged,
+                this.seekToPositionMs, this.callbackOnPositionStateChanged, this.callbackOnError)
             else -> Completable.complete()
         }
 
@@ -100,8 +101,13 @@ class PlayerImpl(
             player.selectTrack(trackType = trackType, trackGroupIndex = trackGroupIndex, trackIndex = trackIndex)
         }
 
-    private fun startPlayback(manifestUrl: String, callbackOnVideoSizeChanged: ((PlayerRatio) -> Unit)?, seekToPositionMs: Long?,
-                              callbackOnPositionStateChanged: ((PositionState) -> Unit)?): Completable =
+    private fun startPlayback(
+        manifestUrl: String,
+        callbackOnVideoSizeChanged: ((PlayerRatio) -> Unit)?,
+        seekToPositionMs: Long?,
+        callbackOnPositionStateChanged: ((PositionState) -> Unit)?,
+        callbackOnError: ((Throwable) -> Unit),
+    ): Completable =
         playerSubject.switchMapCompletable { player ->
             player.setPlayerView(playerView)
                 .andThen(
@@ -110,13 +116,16 @@ class PlayerImpl(
                         .doOnNext { newState -> callbackOnPositionStateChanged?.let { it(
                             PositionState(newState.position, newState.durationMs)
                         ) } }
+                        .doOnError {
+                            callbackOnError(it)
+                        }
                         .ignoreElements()
                 )
-            //Completable.complete()
         }
 
     private fun releasePlayer(): Completable =
         playerSubject.flatMapCompletable { player ->
+            compositeDisposable.dispose()
             player.release()
         }
 

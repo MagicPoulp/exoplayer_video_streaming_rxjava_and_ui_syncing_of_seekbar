@@ -16,6 +16,7 @@ sealed class PlayerAction {
     data class StartPlayback(val manifestUrl: String,
                              val callbackOnVideoSizeChanged: ((PlayerRatio) -> Unit)?,
                              val seekToPositionMs: Long?,
-                             val callbackOnPositionStateChanged: ((PositionState) -> Unit)?
+                             val callbackOnPositionStateChanged: ((PositionState) -> Unit)?,
+                             val callbackOnError: (Throwable) -> Unit,
         ) : PlayerAction()
 }

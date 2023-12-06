@@ -1,12 +1,19 @@
 package com.canal.android.test.ui.player
 
+import android.R.attr.left
+import android.R.attr.top
+import android.app.AlertDialog
+import android.graphics.Bitmap
 import android.graphics.BitmapFactory
 import android.os.Bundle
+import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import android.view.ViewGroup.MarginLayoutParams
 import android.widget.FrameLayout
 import android.widget.ImageView
+import android.widget.LinearLayout
 import android.widget.SeekBar
 import android.widget.TextView
 import androidx.constraintlayout.widget.ConstraintLayout
@@ -15,22 +22,21 @@ import androidx.lifecycle.viewModelScope
 import com.canal.android.test.R
 import com.canal.android.test.common.PlayerRatio
 import com.canal.android.test.common.PositionState
-import com.canal.android.test.common.formatHumanReadable
 import com.canal.android.test.common.msFormatTimeHumanReadable
 import com.canal.android.test.databinding.FragmentPlayerBinding
 import com.canal.android.test.domain.model.MediaDetailShort
 import com.canal.android.test.player.Player
 import com.canal.android.test.player.model.PlayerAction
+import com.canal.android.test.ui.MainActivity
 import com.canal.android.test.ui.common.BaseFragment
 import com.canal.android.test.ui.common.exitFullScreen
 import com.canal.android.test.ui.common.setFullScreen
 import com.canal.android.test.ui.player.model.MediaUi
-import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import org.koin.androidx.viewmodel.ext.android.viewModel
 import org.koin.core.parameter.parametersOf
-import java.io.ByteArrayInputStream
+import java.lang.Exception
 import java.net.URL
 
 
@@ -141,17 +147,13 @@ class PlayerFragment : BaseFragment<MediaUi, FragmentPlayerBinding>() {
         mediaDetailSubtitle?.let { mediaDetailSubtitle2 ->
             mediaDetailSubtitle2.text = mediaDetail.subtitle
         }
-        /*
-        val mediaDetailImage: ImageView? = view?.findViewById(R.id.media_detail_image)
-        mediaDetailImage?.let { mediaDetailImage2 ->
-            val url = URL(mediaDetail.urlImage)
-            val image = BitmapFactory.decodeStream(url.openConnection().getInputStream())
-            mediaDetailImage2.setImageBitmap(image)
-        }*/
 
-        //
         val mediaDetailImage: ImageView? = view?.findViewById(R.id.media_detail_image)
         mediaDetailImage?.let { mediaDetailImage2 ->
+            // we do not mix badly coroutines and RxJava, because here we do something very isolated
+            // and very simple
+            // And it will be disposed automatically using the lifecycle owner
+            // we start an independent IO coroutine on the view lifecycle, just to download the image
             viewLifecycleOwner.lifecycleScope.launch(Dispatchers.IO) {
                 var urlString = mediaDetail.urlImage
                 val brokenUrl = "https://thumb.canalplus.pro/http/unsafe/480x270/media.canal-plus.com/wwwplus/image/38/4/1/VIGNETTE_AUTO_750644_H.jpg"
@@ -160,14 +162,17 @@ class PlayerFragment : BaseFragment<MediaUi, FragmentPlayerBinding>() {
                     urlString = workingUrl
                 }
                 val url = URL(urlString)
-                var image = BitmapFactory.decodeStream(url.openConnection().getInputStream())
-                // we could report an error, but to be able to see something, we put a working URL
-                if (image == null) {
-                    val url2 = URL(workingUrl)
-                    image = BitmapFactory.decodeStream(url2.openConnection().getInputStream())
+                val image = try {
+                    BitmapFactory.decodeStream(url.openConnection().getInputStream())
                 }
-                viewModel.viewModelScope.launch {
-                    mediaDetailImage2.setImageBitmap(image)
+                catch (t: Throwable)
+                {
+                    player?.pushAction(PlayerAction.Release)
+                    (activity as MainActivity?)?.displayGenericErrorDialog()
+                    return@launch
+                }
+                activity?.runOnUiThread {
+                    mediaDetailImage2.setImageBitmap(image as Bitmap?)
                     mediaDetailImage2.visibility = View.VISIBLE
                     mediaDetailImage2.invalidate()
                     mediaDetailImage2.requestLayout()
@@ -200,17 +205,30 @@ class PlayerFragment : BaseFragment<MediaUi, FragmentPlayerBinding>() {
         val callbackOnVideoSizeChanged: (PlayerRatio) -> Unit = { it ->
             viewModel.postPlayerRatio(it)
         }
+
+        val callbackOnError: (Throwable) -> Unit = {
+            Log.e("MyCanalTest", (it.message ?: "Error") + "\n" + it.stackTrace)
+            player?.pushAction(PlayerAction.Release)
+            (activity as MainActivity).displayGenericErrorDialog()
+        }
         val callbackOnPositionStateChanged: (PositionState) -> Unit = { it ->
+            // TESTING: this command below callbackOnError(Throwable("")) will trigger several
+            // exceptions if we tap the third media in the list (that has a wrong image url not hard-coded)
+            // the Observable.interval will call callbackOnError() every second
+            // Moreover, the Coroutine decoding the image will have an exception because the URL is false
+            // With breakpoints can see that all couroutines and Observables are disposed by the
+            // PlayerFragment's onStop() that calls a Release action
+            //callbackOnError(Throwable(""))
             viewModel.postPlayerPositionState(it)
         }
         player?.pushAction(PlayerAction.StartPlayback(
             manifestUrl = url,
             callbackOnVideoSizeChanged = callbackOnVideoSizeChanged,
             seekToPositionMs = seekToPositionMs,
-            callbackOnPositionStateChanged = callbackOnPositionStateChanged)
-        )
+            callbackOnPositionStateChanged = callbackOnPositionStateChanged,
+            callbackOnError = callbackOnError
+        ))
     }
-
 
     // https://devstreaming-cdn.apple.com/videos/streaming/examples/bipbop_16x9/bipbop_16x9_variant.m3u8
     private fun getRatioFromUrl(url: String): PlayerRatio? {

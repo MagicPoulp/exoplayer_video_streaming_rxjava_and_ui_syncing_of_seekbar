@@ -3,4 +3,7 @@
     <string name="media_title">media title</string>
     <string name="media_subtitle">media subtitle</string>
     <string name="media_image">media image</string>
+    <string name="error">Error</string>
+    <string name="error_occurred">An error has occured.</string>
+    <string name="ok">OK</string>
 </resources>

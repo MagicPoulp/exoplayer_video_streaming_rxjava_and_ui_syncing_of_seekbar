@@ -25,6 +25,7 @@ import io.reactivex.Single
 import io.reactivex.android.schedulers.AndroidSchedulers
 import io.reactivex.disposables.CompositeDisposable
 import io.reactivex.subjects.BehaviorSubject
+import org.reactivestreams.Subscription
 import java.util.concurrent.TimeUnit
 
 
@@ -45,10 +46,15 @@ import java.util.concurrent.TimeUnit
     private val compositeDisposable = CompositeDisposable()
 
     private val errorListener: PlayerErrorListener by lazy {
-        PlayerErrorListener { exception -> _stateSubject.onError(exception) }
+        PlayerErrorListener { exception ->
+            try { stop() } catch(_: Throwable) {}
+            _stateSubject.onError(exception)
+        }
     }
 
     private var callbackOnVideoSizeChanged: ((PlayerRatio) -> Unit)? = null
+
+    private var positionIntervalSubscription: Subscription? = null
 
     private val listener: AnalyticsListener by lazy {
         object : AnalyticsListener {
@@ -113,6 +119,7 @@ import java.util.concurrent.TimeUnit
             .subscribe({
                 _stateSubject.onNext(it)
             }, {
+                try { stop() } catch(_: Throwable) {}
                 _stateSubject.onError(it)
             }).also {
                 compositeDisposable.add(it)
@@ -185,8 +192,8 @@ import java.util.concurrent.TimeUnit
     }
 
     override fun release(): Completable {
-        player.release()
         compositeDisposable.dispose()
+        player.release()
         return Completable.complete()
     }
 
