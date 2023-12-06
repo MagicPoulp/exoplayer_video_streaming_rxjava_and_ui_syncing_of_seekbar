@@ -33,9 +33,10 @@ import java.util.concurrent.TimeUnit
 ) : PlayerCore {
 
     private val rendererFactory = DefaultRenderersFactory(context)
-    private val player: ExoPlayer = ExoPlayer.Builder(context, rendererFactory)
+    // we use an adapter class because COMMAND_SEEK_IN_CURRENT_MEDIA_ITEM is missing for seekTo()
+    private val player: ExoPlayer = CustomExoPlayerImpl(ExoPlayer.Builder(context, rendererFactory)
         .setLooper(Looper.getMainLooper())
-        .build()
+        .build())
 
     private val _stateSubject: BehaviorSubject<PlayerState> = BehaviorSubject.create()
     internal val currentState: PlayerState
@@ -140,7 +141,8 @@ import java.util.concurrent.TimeUnit
                     // we must use 2 parameters because we have COMMAND_SEEK_TO_MEDIA_ITEM but not COMMAND_SEEK_IN_CURRENT_MEDIA_ITEM
                     // see the source code documentation for details
                     // However, it enforces the first mediaItemIndex
-                    player.seekTo(0, seekToPositionMs)
+                    // a wrapper class was used for the player to use seekTo with the missing command COMMAND_SEEK_IN_CURRENT_MEDIA_ITEM
+                    player.seekTo(seekToPositionMs)
                 }
                 player.playWhenReady = true
                 startPlayerPositionUpdate()
@@ -190,10 +192,8 @@ import java.util.concurrent.TimeUnit
 
     override fun seekTo(positionMs: Long): Completable {
         pause()
-        // we must use 2 parameters because we have COMMAND_SEEK_TO_MEDIA_ITEM but not COMMAND_SEEK_IN_CURRENT_MEDIA_ITEM
-        // see the source code documentation for details
-        // However, it enforces the first mediaItemIndex
-        player.seekTo(0, positionMs)
+        // a wrapper class was used for the player to use seekTo with the missing command COMMAND_SEEK_IN_CURRENT_MEDIA_ITEM
+        player.seekTo(positionMs)
         play()
         return Completable.complete()
     }
