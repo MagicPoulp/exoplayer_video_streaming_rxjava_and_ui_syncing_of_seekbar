@@ -4,7 +4,6 @@ import android.content.Context
 import android.net.Uri
 import android.os.Looper
 import android.view.SurfaceView
-import androidx.media3.common.C.TrackType
 import androidx.media3.common.Player.STATE_BUFFERING
 import androidx.media3.common.Player.STATE_ENDED
 import androidx.media3.common.Player.STATE_IDLE
@@ -24,6 +23,7 @@ import io.reactivex.Observable
 import io.reactivex.Single
 import io.reactivex.android.schedulers.AndroidSchedulers
 import io.reactivex.disposables.CompositeDisposable
+import io.reactivex.disposables.Disposable
 import io.reactivex.subjects.BehaviorSubject
 import org.reactivestreams.Subscription
 import java.util.concurrent.TimeUnit
@@ -46,15 +46,12 @@ import java.util.concurrent.TimeUnit
     private val compositeDisposable = CompositeDisposable()
 
     private val errorListener: PlayerErrorListener by lazy {
-        PlayerErrorListener { exception ->
-            try { stop() } catch(_: Throwable) {}
-            _stateSubject.onError(exception)
-        }
+        PlayerErrorListener { exception ->  _stateSubject.onError(exception) }
     }
 
     private var callbackOnVideoSizeChanged: ((PlayerRatio) -> Unit)? = null
 
-    private var positionIntervalSubscription: Subscription? = null
+    private var longDisposable1: Disposable? = null
 
     private val listener: AnalyticsListener by lazy {
         object : AnalyticsListener {
@@ -107,23 +104,28 @@ import java.util.concurrent.TimeUnit
         }
     }
 
-    private fun startPlayerPositionUpdate() {
-        Observable.interval(1L, TimeUnit.SECONDS)
+    private fun startPlayerPositionUpdate(): Disposable {
+        val disposable = Observable.interval(1L, TimeUnit.SECONDS)
             .observeOn(AndroidSchedulers.mainThread())
             .map {
+                println("DB new")
                 currentState.copy(
                     position = player.currentPosition,
                     durationMs = player.duration
                 )
             }
             .subscribe({
+                println("DB new2")
                 _stateSubject.onNext(it)
             }, {
-                try { stop() } catch(_: Throwable) {}
                 _stateSubject.onError(it)
-            }).also {
-                compositeDisposable.add(it)
-            }
+            })
+        compositeDisposable.add(disposable)
+        if (longDisposable1?.isDisposed == true) {
+            compositeDisposable.dispose()
+        }
+        println("DB startPlayerPositionUpdate end")
+        return disposable
     }
 
     override fun setPlayerView(surfaceView: SurfaceView): Completable =
@@ -138,7 +140,8 @@ import java.util.concurrent.TimeUnit
                 DefaultHttpDataSource.Factory()
             )
         }.flatMapCompletable { mediaSource ->
-            Completable.fromAction {
+            val completable1 = Completable.fromAction {
+                player.release()
                 this.callbackOnVideoSizeChanged = callbackOnVideoSizeChanged
                 player.addAnalyticsListener(listener)
                 player.addAnalyticsListener(errorListener)
@@ -152,9 +155,17 @@ import java.util.concurrent.TimeUnit
                     player.seekTo(seekToPositionMs)
                 }
                 player.playWhenReady = true
-                startPlayerPositionUpdate()
+                println("DB PLAYER SETUP")
+                compositeDisposable.add(startPlayerPositionUpdate())
             }.subscribeOn(AndroidSchedulers.mainThread())
+                .doOnDispose{ println("DB DISPOSE2") }
+            val localDisposable1 = completable1.subscribe()
+            localDisposable1?.let { compositeDisposable.add(it) }
+            longDisposable1 = localDisposable1
+            println("DB STEP 3")
+            completable1
         }
+            .doOnDispose{ println("DB DISPOSE4") }
             .andThen(_stateSubject)
             .subscribeOn(AndroidSchedulers.mainThread())
 
@@ -192,6 +203,8 @@ import java.util.concurrent.TimeUnit
     }
 
     override fun release(): Completable {
+        println("DB EXO RELEASE")
+        player.playWhenReady = false
         compositeDisposable.dispose()
         player.release()
         return Completable.complete()

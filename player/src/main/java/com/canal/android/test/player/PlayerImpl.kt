@@ -34,6 +34,8 @@ class PlayerImpl(
     private val playerActionObservable: Observable<PlayerAction>
         get() = playerActionSubject
 
+    private var blockRestart: Boolean = false
+
     init {
         observePlayerActions()
         initializePlayer()
@@ -48,25 +50,27 @@ class PlayerImpl(
     }
 
     private fun observePlayerActions() {
-        playerActionObservable
+        compositeDisposable.add(playerActionObservable
             .flatMapCompletable { action ->
                 action.handle()
             }
             // Question 1.3 the player must be used from the same thread has the looper set in PlayerCoreImpl
             .observeOn(AndroidSchedulers.mainThread())
-            .subscribe()
-            .autoDispose()
+            .subscribe())
     }
 
     // Question 1.1 implement all remaining PlayerAction
     private fun PlayerAction.handle(): Completable =
-        when (this) {
+        if (blockRestart) {
+            Completable.complete()
+        }
+        else when (this) {
             is PlayerAction.PlayPauseClicked -> Completable.complete()
             is PlayerAction.Play -> play()
             is PlayerAction.Pause -> pause()
             is PlayerAction.SeekTo -> seekTo(this.seekToPositionMs)
             is PlayerAction.StopPlayback -> stopPlayback()
-            is PlayerAction.Release -> releasePlayer()
+            is PlayerAction.Release -> releasePlayer(this.blockRestart)
             is PlayerAction.SelectTrack -> selectTrack(this.trackType, this.trackGroupIndex, this.trackIndex)
             is PlayerAction.StartPlayback -> startPlayback(this.manifestUrl, this.callbackOnVideoSizeChanged,
                 this.seekToPositionMs, this.callbackOnPositionStateChanged, this.callbackOnError)
@@ -123,9 +127,12 @@ class PlayerImpl(
                 )
         }
 
-    private fun releasePlayer(): Completable =
+    private fun releasePlayer(blockRestart: Boolean?): Completable =
         playerSubject.flatMapCompletable { player ->
+            println("DB RELEASE")
+            this.blockRestart = true
             compositeDisposable.dispose()
+            println("DB RELEASE2")
             player.release()
         }
 

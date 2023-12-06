@@ -167,7 +167,7 @@ class PlayerFragment : BaseFragment<MediaUi, FragmentPlayerBinding>() {
                 }
                 catch (t: Throwable)
                 {
-                    player?.pushAction(PlayerAction.Release)
+                    player?.pushAction(PlayerAction.Release(blockRestart = true))
                     (activity as MainActivity?)?.displayGenericErrorDialog()
                     return@launch
                 }
@@ -208,7 +208,7 @@ class PlayerFragment : BaseFragment<MediaUi, FragmentPlayerBinding>() {
 
         val callbackOnError: (Throwable) -> Unit = {
             Log.e("MyCanalTest", (it.message ?: "Error") + "\n" + it.stackTrace)
-            player?.pushAction(PlayerAction.Release)
+            player?.pushAction(PlayerAction.Release(blockRestart = true))
             (activity as MainActivity).displayGenericErrorDialog()
         }
         val callbackOnPositionStateChanged: (PositionState) -> Unit = { it ->
@@ -251,7 +251,7 @@ class PlayerFragment : BaseFragment<MediaUi, FragmentPlayerBinding>() {
         }
         super.onSaveInstanceState(outState)
         if (android.os.Build.VERSION.SDK_INT < android.os.Build.VERSION_CODES.P) {
-            player?.pushAction(PlayerAction.Release)
+            player?.pushAction(PlayerAction.Release())
         }
     }
 
@@ -260,7 +260,7 @@ class PlayerFragment : BaseFragment<MediaUi, FragmentPlayerBinding>() {
         super.onStop()
         // API 28+ has onStop() after onSaveInstanceState(), otherwise it is before
         if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.P) {
-            player?.pushAction(PlayerAction.Release)
+            player?.pushAction(PlayerAction.Release())
         }
     }
 
@@ -273,7 +273,7 @@ class PlayerFragment : BaseFragment<MediaUi, FragmentPlayerBinding>() {
 
     override fun onDestroyView() {
         activity.exitFullScreen()
-        player?.pushAction(PlayerAction.Release)
+        player?.pushAction(PlayerAction.Release(blockRestart = true))
         super.onDestroyView()
     }
 }
