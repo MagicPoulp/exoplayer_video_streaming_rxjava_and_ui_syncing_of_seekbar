@@ -4,10 +4,14 @@ import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import android.widget.EditText
 import android.widget.FrameLayout
+import android.widget.SeekBar
 import androidx.constraintlayout.widget.ConstraintLayout
 import com.canal.android.test.R
 import com.canal.android.test.common.PlayerRatio
+import com.canal.android.test.common.PositionState
+import com.canal.android.test.common.formatHumanReadable
 import com.canal.android.test.databinding.FragmentPlayerBinding
 import com.canal.android.test.player.Player
 import com.canal.android.test.player.model.PlayerAction
@@ -34,6 +38,8 @@ class PlayerFragment : BaseFragment<MediaUi, FragmentPlayerBinding>() {
         activity.setFullScreen()
         savedInstanceState?.getLong("previousPlayerPosition", 0)?.let { previousPlayerPosition = it }
 
+        val simpleSeekBar: SeekBar? = activity?.findViewById(R.id.seek_bar)
+
         initPlayer()
         viewModel.uiData.observe(viewLifecycleOwner) { mediaUi ->
             mediaUrlForRestart = mediaUi.manifestUrl
@@ -43,15 +49,45 @@ class PlayerFragment : BaseFragment<MediaUi, FragmentPlayerBinding>() {
             ratio?.let {
                 viewModel.postPlayerRatio(it)
             }
-            val callbackOnVideoSizeChanged: (PlayerRatio) -> Unit = { it ->
-                viewModel.postPlayerRatio(it)
-            }
-            player?.pushAction(PlayerAction.StartPlayback(mediaUi.manifestUrl, callbackOnVideoSizeChanged, null))
+            sendActionStartPlaybackWrapped(url = mediaUi.manifestUrl, seekToPositionMs = null)
         }
 
         viewModel.playerRatio.observe(viewLifecycleOwner) { ratio ->
             updatePlayerContainerRatio(ratio, view)
         }
+
+        // Question 1.3 Display a seekBar (with readable position/duration updated every seconds)
+        viewModel.playerPositionState.observe(viewLifecycleOwner) { positionState ->
+            updateSeekBar(positionState, view)
+        }
+    }
+
+    private fun updatePlayerContainerRatio(ratio: PlayerRatio, view: View?) {
+        val playerView: FrameLayout? = view?.findViewById(R.id.player_container)
+        playerView?.let { playerView2 ->
+            (playerView2.layoutParams as ConstraintLayout.LayoutParams).dimensionRatio = "H," + ratio.w + ":" + ratio.h
+            playerView2.invalidate()
+            playerView2.requestLayout()
+        }
+    }
+
+    private fun updateSeekBar(positionState: PositionState, view: View?) {
+        val seekBarContainer: ConstraintLayout? = view?.findViewById(R.id.seek_bar_container)
+        val seekBar: SeekBar? = view?.findViewById(R.id.seek_bar)
+        val seekBarText: EditText? = view?.findViewById(R.id.seek_bar_text)
+        seekBar?.let { seekBar2 ->
+            seekBar2.max = positionState.duration.toInt()
+            seekBar2.progress = positionState.position.toInt()
+        }
+        seekBarText?.let { seekBarText2 ->
+            var text = positionState.position.formatHumanReadable + " / " + positionState.duration.formatHumanReadable
+            if (positionState.position < 0 || positionState.duration < 0) {
+                text = ""
+            }
+            seekBarText2.setText(text)
+        }
+        seekBarContainer?.invalidate()
+        seekBarContainer?.requestLayout()
     }
 
     // Question 1.1 Respect video ratio of playback stream (see AnalyticsListener from Exoplayer)
@@ -65,24 +101,25 @@ class PlayerFragment : BaseFragment<MediaUi, FragmentPlayerBinding>() {
         // when the activity does a onRestart, onViewCreated is not called, so we must set up the player
         mediaUrlForRestart?.let {
             initPlayer()
-            val callbackOnVideoSizeChanged: (PlayerRatio) -> Unit = { it ->
-                viewModel.postPlayerRatio(it)
-            }
-            player?.pushAction(PlayerAction.StartPlayback(
-                manifestUrl = it,
-                callbackOnVideoSizeChanged = callbackOnVideoSizeChanged,
-                seekToPositionMs = previousPlayerPosition)
-            )
+            sendActionStartPlaybackWrapped(url = it, seekToPositionMs = previousPlayerPosition)
         }
     }
 
-    private fun updatePlayerContainerRatio(ratio: PlayerRatio, view: View?) {
-        val playerView: FrameLayout? = view?.findViewById(R.id.player_container)
-        playerView?.let { playerView2 ->
-            (playerView2.layoutParams as ConstraintLayout.LayoutParams).dimensionRatio = "H," + ratio.w + ":" + ratio.h
-            playerView2.requestLayout()
+    private fun sendActionStartPlaybackWrapped(url: String, seekToPositionMs: Long?) {
+        val callbackOnVideoSizeChanged: (PlayerRatio) -> Unit = { it ->
+            viewModel.postPlayerRatio(it)
         }
+        val callbackOnPositionStateChanged: (PositionState) -> Unit = { it ->
+            viewModel.postPlayerPositionState(it)
+        }
+        player?.pushAction(PlayerAction.StartPlayback(
+            manifestUrl = url,
+            callbackOnVideoSizeChanged = callbackOnVideoSizeChanged,
+            seekToPositionMs = seekToPositionMs,
+            callbackOnPositionStateChanged = callbackOnPositionStateChanged)
+        )
     }
+
 
     // https://devstreaming-cdn.apple.com/videos/streaming/examples/bipbop_16x9/bipbop_16x9_variant.m3u8
     private fun getRatioFromUrl(url: String): PlayerRatio? {

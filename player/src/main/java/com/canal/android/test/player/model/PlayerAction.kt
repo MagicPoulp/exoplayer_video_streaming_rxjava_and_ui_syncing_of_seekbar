@@ -1,6 +1,7 @@
 package com.canal.android.test.player.model
 
 import com.canal.android.test.common.PlayerRatio
+import com.canal.android.test.common.PositionState
 
 sealed class PlayerAction {
     object PlayPauseClicked : PlayerAction()
@@ -12,5 +13,9 @@ sealed class PlayerAction {
     data class SelectTrack(val trackType: Int, val trackGroupIndex: Int, val trackIndex: Int) :
         PlayerAction()
 
-    data class StartPlayback(val manifestUrl: String, val callbackOnVideoSizeChanged: ((PlayerRatio) -> Unit)?, val seekToPositionMs: Long?) : PlayerAction()
+    data class StartPlayback(val manifestUrl: String,
+                             val callbackOnVideoSizeChanged: ((PlayerRatio) -> Unit)?,
+                             val seekToPositionMs: Long?,
+                             val callbackOnPositionStateChanged: ((PositionState) -> Unit)?
+        ) : PlayerAction()
 }

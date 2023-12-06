@@ -1,10 +1,11 @@
 package com.canal.android.test.player
 
+import android.annotation.SuppressLint
 import android.content.Context
 import android.util.Log
 import android.view.SurfaceView
-import androidx.annotation.MainThread
 import com.canal.android.test.common.PlayerRatio
+import com.canal.android.test.common.PositionState
 import com.canal.android.test.exoplayer.PlayerCoreImpl
 import com.canal.android.test.exoplayer.PlayerFactory
 import com.canal.android.test.player.model.PlayerAction
@@ -67,7 +68,7 @@ class PlayerImpl(
             is PlayerAction.StopPlayback -> stopPlayback()
             is PlayerAction.Release -> releasePlayer()
             is PlayerAction.SelectTrack -> selectTrack(this.trackType, this.trackGroupIndex, this.trackIndex)
-            is PlayerAction.StartPlayback -> startPlayback(this.manifestUrl, this.callbackOnVideoSizeChanged, this.seekToPositionMs)
+            is PlayerAction.StartPlayback -> startPlayback(this.manifestUrl, this.callbackOnVideoSizeChanged, this.seekToPositionMs, this.callbackOnPositionStateChanged)
             else -> Completable.complete()
         }
 
@@ -99,13 +100,19 @@ class PlayerImpl(
             player.selectTrack(trackType = trackType, trackGroupIndex = trackGroupIndex, trackIndex = trackIndex)
         }
 
-    private fun startPlayback(manifestUrl: String, callbackOnVideoSizeChanged: ((PlayerRatio) -> Unit)?, seekToPositionMs: Long?): Completable =
+    private fun startPlayback(manifestUrl: String, callbackOnVideoSizeChanged: ((PlayerRatio) -> Unit)?, seekToPositionMs: Long?,
+                              callbackOnPositionStateChanged: ((PositionState) -> Unit)?): Completable =
         playerSubject.switchMapCompletable { player ->
             player.setPlayerView(playerView)
                 .andThen(
                     player.startPlayback(manifestUrl, callbackOnVideoSizeChanged, seekToPositionMs)
+                        .distinct()
+                        .doOnNext { newState -> callbackOnPositionStateChanged?.let { it(
+                            PositionState(newState.position, newState.durationMs)
+                        ) } }
                         .ignoreElements()
                 )
+            //Completable.complete()
         }
 
     private fun releasePlayer(): Completable =
