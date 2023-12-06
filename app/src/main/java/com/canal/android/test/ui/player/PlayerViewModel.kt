@@ -4,6 +4,7 @@ import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
 import com.canal.android.test.common.PlayerRatio
 import com.canal.android.test.common.PositionState
+import com.canal.android.test.domain.model.MediaDetailShort
 import com.canal.android.test.domain.model.NavigateTo
 import com.canal.android.test.domain.usecase.GetMediaUseCase
 import com.canal.android.test.ui.common.BaseViewModel
@@ -38,14 +39,21 @@ class PlayerViewModel(
     private val _playerRatio = MutableLiveData<PlayerRatio>()
     val playerRatio: LiveData<PlayerRatio>
         get() = _playerRatio
-    public fun postPlayerRatio(ratio: PlayerRatio) {
+    fun postPlayerRatio(ratio: PlayerRatio) {
         _playerRatio.value = ratio
     }
 
     private val _playerPositionState = MutableLiveData<PositionState>()
     val playerPositionState: LiveData<PositionState>
         get() = _playerPositionState
-    public fun postPlayerPositionState(positionState: PositionState) {
+    fun postPlayerPositionState(positionState: PositionState) {
         _playerPositionState.value = positionState
+    }
+
+    private val _mediaDetail = MutableLiveData<MediaDetailShort>()
+    val mediaDetail: LiveData<MediaDetailShort>
+        get() = _mediaDetail
+    fun postMediaDetail(positionState: MediaDetailShort) {
+        _mediaDetail.value = positionState
     }
 }

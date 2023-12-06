@@ -5,6 +5,77 @@
     android:background="@color/player_background"
     android:layout_width="match_parent"
     android:layout_height="match_parent">
+
+    <androidx.constraintlayout.widget.ConstraintLayout
+        android:background="@color/player_background"
+        android:id="@+id/media_detail_container"
+        android:layout_width="fill_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginStart="10dp"
+        android:layout_marginEnd="10dp"
+        android:layout_marginTop="0dp"
+        android:layout_marginBottom="60dp"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent"
+        android:visibility="gone"
+        >
+        <TextView
+            android:labelFor="@id/media_detail_title"
+            android:background="@color/player_background"
+            android:textColor="@color/colorBackgroundGray"
+            android:id="@+id/media_detail_title"
+            android:layout_marginStart="0dp"
+            android:layout_marginEnd="0dp"
+            android:layout_marginTop="40dp"
+            android:layout_marginBottom="0dp"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toTopOf="parent"
+            android:autofillHints=""
+            android:inputType="none"
+            android:contentDescription="@string/media_title">
+        </TextView>
+        <TextView
+            android:labelFor="@id/media_detail_subtitle"
+            android:background="@color/player_background"
+            android:textColor="@color/colorBackgroundGray"
+            android:id="@+id/media_detail_subtitle"
+            android:layout_marginStart="0dp"
+            android:layout_marginEnd="0dp"
+            android:layout_marginTop="10dp"
+            android:layout_marginBottom="0dp"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toBottomOf="@id/media_detail_title"
+            android:autofillHints=""
+            android:inputType="none"
+            android:contentDescription="@string/media_subtitle">
+        </TextView>
+        <ImageView
+            android:labelFor="@id/media_detail_image"
+            android:background="#FFFFFF"
+            android:textColor="@color/colorBackgroundGray"
+            android:id="@+id/media_detail_image"
+            android:layout_marginStart="0dp"
+            android:layout_marginEnd="0dp"
+            android:layout_marginTop="10dp"
+            android:layout_marginBottom="0dp"
+            android:adjustViewBounds="true"
+            android:layout_width="wrap_content"
+            android:layout_height="60dp"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toBottomOf="@id/media_detail_subtitle"
+            android:visibility="gone"
+            android:contentDescription="@string/media_image">
+        </ImageView>
+    </androidx.constraintlayout.widget.ConstraintLayout>
+
     <FrameLayout
         android:background="@color/player_background"
         android:id="@+id/player_container"
@@ -19,9 +90,7 @@
         app:layout_constraintBottom_toBottomOf="parent">
     </FrameLayout>
 
-    <androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
-        xmlns:app="http://schemas.android.com/apk/res-auto"
-        xmlns:tools="http://schemas.android.com/tools"
+    <androidx.constraintlayout.widget.ConstraintLayout
         android:background="@color/player_background"
         android:id="@+id/seek_bar_container"
         android:layout_width="fill_parent"
@@ -46,7 +115,7 @@
             app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintTop_toTopOf="parent">
         </SeekBar>
-        <EditText
+        <TextView
             android:background="@color/player_background"
             android:textColor="@color/colorBackgroundGray"
             android:id="@+id/seek_bar_text"
@@ -58,7 +127,8 @@
             android:layout_height="wrap_content"
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintTop_toBottomOf="@+id/seek_bar">
-        </EditText>
+            app:layout_constraintTop_toBottomOf="@+id/seek_bar"
+            android:autofillHints="">
+        </TextView>
     </androidx.constraintlayout.widget.ConstraintLayout>
 </androidx.constraintlayout.widget.ConstraintLayout>

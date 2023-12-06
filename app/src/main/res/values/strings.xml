@@ -1,3 +1,6 @@
 <resources>
     <string name="app_name">MyCanalTest</string>
+    <string name="media_title">media title</string>
+    <string name="media_subtitle">media subtitle</string>
+    <string name="media_image">media image</string>
 </resources>
