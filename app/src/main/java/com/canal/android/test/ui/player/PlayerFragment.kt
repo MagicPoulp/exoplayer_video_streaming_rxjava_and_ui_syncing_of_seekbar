@@ -16,6 +16,7 @@ import com.canal.android.test.R
 import com.canal.android.test.common.PlayerRatio
 import com.canal.android.test.common.PositionState
 import com.canal.android.test.common.formatHumanReadable
+import com.canal.android.test.common.msFormatTimeHumanReadable
 import com.canal.android.test.databinding.FragmentPlayerBinding
 import com.canal.android.test.domain.model.MediaDetailShort
 import com.canal.android.test.player.Player
@@ -118,7 +119,7 @@ class PlayerFragment : BaseFragment<MediaUi, FragmentPlayerBinding>() {
             seekBar2.progress = positionState.position.toInt()
         }
         seekBarText?.let { seekBarText2 ->
-            var text = positionState.position.formatHumanReadable + " / " + positionState.duration.formatHumanReadable
+            var text = positionState.position.msFormatTimeHumanReadable() + " / " + positionState.duration.msFormatTimeHumanReadable()
             if (positionState.position < 0 || positionState.duration < 0) {
                 text = ""
             }
