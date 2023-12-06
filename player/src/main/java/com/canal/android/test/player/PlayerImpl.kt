@@ -3,6 +3,7 @@ package com.canal.android.test.player
 import android.content.Context
 import android.util.Log
 import android.view.SurfaceView
+import androidx.annotation.MainThread
 import com.canal.android.test.common.PlayerRatio
 import com.canal.android.test.exoplayer.PlayerCoreImpl
 import com.canal.android.test.exoplayer.PlayerFactory
@@ -10,6 +11,7 @@ import com.canal.android.test.player.model.PlayerAction
 import io.reactivex.Completable
 import io.reactivex.Observable
 import io.reactivex.Single
+import io.reactivex.android.schedulers.AndroidSchedulers
 import io.reactivex.disposables.CompositeDisposable
 import io.reactivex.disposables.Disposable
 import io.reactivex.schedulers.Schedulers
@@ -49,18 +51,53 @@ class PlayerImpl(
             .flatMapCompletable { action ->
                 action.handle()
             }
+            // Question 1.3 the player must be used from the same thread has the looper set in PlayerCoreImpl
+            .subscribeOn(AndroidSchedulers.mainThread())
             .subscribe()
             .autoDispose()
     }
 
+    // Question 1.1 implement all remaining PlayerAction
     private fun PlayerAction.handle(): Completable =
         when (this) {
-            is PlayerAction.StartPlayback -> startPlayback(this.manifestUrl, this.callbackOnVideoSizeChanged)
+            is PlayerAction.PlayPauseClicked -> Completable.complete()
+            is PlayerAction.Play -> play()
+            is PlayerAction.Pause -> pause()
+            is PlayerAction.SeekTo -> seekTo(this.seekToPositionMs)
+            is PlayerAction.StopPlayback -> stopPlayback()
             is PlayerAction.Release -> releasePlayer()
-            // TODO handle all other actions
+            is PlayerAction.SelectTrack -> selectTrack(this.trackType, this.trackGroupIndex, this.trackIndex)
+            is PlayerAction.StartPlayback -> startPlayback(this.manifestUrl, this.callbackOnVideoSizeChanged)
             else -> Completable.complete()
         }
 
+    private fun play(): Completable =
+        playerSubject.switchMapCompletable { player ->
+            if (!player.isPaused()) {
+                return@switchMapCompletable Completable.complete()
+            }
+            player.togglePlayPause()
+        }
+
+    private fun pause(): Completable =
+        playerSubject.switchMapCompletable { player ->
+            player.pause()
+        }
+
+    private fun seekTo(seekToPositionMs: Long): Completable =
+        playerSubject.switchMapCompletable { player ->
+            player.seekTo(positionMs = seekToPositionMs)
+        }
+
+    private fun stopPlayback(): Completable =
+        playerSubject.switchMapCompletable { player ->
+            player.stop()
+        }
+
+    private fun selectTrack(trackType: Int, trackGroupIndex: Int, trackIndex: Int) : Completable =
+        playerSubject.switchMapCompletable { player ->
+            player.selectTrack(trackType = trackType, trackGroupIndex = trackGroupIndex, trackIndex = trackIndex)
+        }
 
     private fun startPlayback(manifestUrl: String, callbackOnVideoSizeChanged: ((PlayerRatio) -> Unit)?): Completable =
         playerSubject.switchMapCompletable { player ->

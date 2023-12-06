@@ -7,6 +7,7 @@ import io.reactivex.Completable
 import io.reactivex.Observable
 
 interface PlayerCore {
+    fun isPaused(): Boolean
     fun pause(): Completable
     fun togglePlayPause(): Completable
     fun stop(): Completable

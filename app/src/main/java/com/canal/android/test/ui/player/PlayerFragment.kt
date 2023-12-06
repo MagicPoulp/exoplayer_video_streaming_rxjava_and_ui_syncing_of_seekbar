@@ -58,7 +58,6 @@ class PlayerFragment : BaseFragment<MediaUi, FragmentPlayerBinding>() {
     // We need a separate XML layout for the landscape if we want the 16x9 ratio to fill the sceen in landscape
     // Forcing activity?.requestedOrientation or rotating the view are not as good
     // AnalyticsListener has an UnstableAPI onVideoSizeChanged if the video ratio changes
-
     //
     // Question 1.7 Respect playerFragment lifeCycle (player should be released onStop, and should playback at previous position at onStart)
     override fun onStart() {
@@ -101,7 +100,7 @@ class PlayerFragment : BaseFragment<MediaUi, FragmentPlayerBinding>() {
     override fun onSaveInstanceState(outState: Bundle) {
         // API 28+ has onStop() after onSaveInstanceState(), otherwise it is before
         if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.P) {
-            previousPlayerPosition = 1000 // TODO get the current position
+            previousPlayerPosition = 10000 // TODO get the current position
         }
         outState.putLong("previousPlayerPosition", previousPlayerPosition)
         super.onSaveInstanceState(outState)
@@ -112,7 +111,7 @@ class PlayerFragment : BaseFragment<MediaUi, FragmentPlayerBinding>() {
         super.onStop()
         // API 28+ has onStop() after onSaveInstanceState(), otherwise it is before
         if (android.os.Build.VERSION.SDK_INT < android.os.Build.VERSION_CODES.P) {
-            previousPlayerPosition = 1000 // TODO get the current position
+            previousPlayerPosition = 10000 // TODO get the current position
         }
         player?.pushAction(PlayerAction.Release)
     }

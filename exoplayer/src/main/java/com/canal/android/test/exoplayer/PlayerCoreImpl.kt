@@ -4,10 +4,12 @@ import android.content.Context
 import android.net.Uri
 import android.os.Looper
 import android.view.SurfaceView
+import androidx.media3.common.C.TrackType
 import androidx.media3.common.Player.STATE_BUFFERING
 import androidx.media3.common.Player.STATE_ENDED
 import androidx.media3.common.Player.STATE_IDLE
 import androidx.media3.common.Player.STATE_READY
+import androidx.media3.common.TrackSelectionOverride
 import androidx.media3.common.VideoSize
 import androidx.media3.common.util.UnstableApi
 import androidx.media3.datasource.DefaultHttpDataSource
@@ -24,6 +26,7 @@ import io.reactivex.android.schedulers.AndroidSchedulers
 import io.reactivex.disposables.CompositeDisposable
 import io.reactivex.subjects.BehaviorSubject
 import java.util.concurrent.TimeUnit
+
 
 @UnstableApi class PlayerCoreImpl(
     context: Context
@@ -140,12 +143,34 @@ import java.util.concurrent.TimeUnit
             .andThen(_stateSubject)
             .subscribeOn(AndroidSchedulers.mainThread())
 
-    override fun pause(): Completable = Completable.complete() // TODO: implement pause
+    override fun pause(): Completable {
+        player.pause()
+        compositeDisposable.clear()
+        return Completable.complete()
+    }
 
-    override fun togglePlayPause(): Completable = Completable.complete() // TODO: implement pause
+    private fun play(): Completable {
+        startPlayerPositionUpdate()
+        return Completable.complete()
+    }
+
+    override fun isPaused(): Boolean {
+        return currentState.status == PlayerStatus.PAUSED
+    }
+
+    override fun togglePlayPause(): Completable {
+        return when (currentState.status) {
+            PlayerStatus.IDLE -> play()
+            PlayerStatus.PLAYING -> pause()
+            PlayerStatus.PAUSED -> play()
+            PlayerStatus.BUFFERING -> pause()
+            else -> Completable.complete()
+        }
+    }
 
     override fun stop(): Completable {
         player.stop()
+        player.release()
         compositeDisposable.clear()
         return Completable.complete()
     }
@@ -156,10 +181,41 @@ import java.util.concurrent.TimeUnit
         return Completable.complete()
     }
 
-    override fun seekTo(positionMs: Long): Completable = Completable.complete() // TODO: seekTo
+    override fun seekTo(positionMs: Long): Completable {
+        player.seekTo(positionMs)
+        return Completable.complete()
+    }
 
-    override fun selectTrack(trackType: Int, trackGroupIndex: Int, trackIndex: Int): Completable =
-        Completable.complete() // TODO: selectTrack (video/audio/text)
+    // https://exoplayer.dev/track-selection.html
+    override fun selectTrack(trackType: Int, trackGroupIndex: Int, trackIndex: Int): Completable {
+        player.pause()
+        val tracks = player.currentTracks
+        if (trackGroupIndex >= tracks.groups.size) {
+            return Completable.complete()
+        }
+        val trackGroup = tracks.groups[trackGroupIndex]
+        val groupTrackType: Int = trackGroup.type
+        val trackInGroupIsSupported = trackGroup.isSupported
+        if (!trackInGroupIsSupported || trackType != groupTrackType || trackIndex >= trackGroup.length) {
+            return Completable.complete()
+        }
+        val isTrackSupported = trackGroup.isTrackSupported(trackIndex)
+        val isTrackSelected = trackGroup.isTrackSelected(trackIndex)
+        if (isTrackSupported && !isTrackSelected) {
+            player.trackSelectionParameters = player.trackSelectionParameters
+                .buildUpon()
+                .setOverrideForType(
+                    TrackSelectionOverride(
+                        trackGroup.mediaTrackGroup,
+                        0
+                    )
+                )
+                .build()
+            player.play()
+            return Completable.complete()
+        }
+        return Completable.complete()
+    }
 
     companion object {
         fun getInstance(
