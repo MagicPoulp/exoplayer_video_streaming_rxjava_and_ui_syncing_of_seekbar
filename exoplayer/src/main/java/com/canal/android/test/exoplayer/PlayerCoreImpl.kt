@@ -2,6 +2,7 @@ package com.canal.android.test.exoplayer
 
 import android.content.Context
 import android.net.Uri
+import android.os.Handler
 import android.os.Looper
 import android.view.SurfaceView
 import androidx.media3.common.Player.STATE_BUFFERING
@@ -104,7 +105,9 @@ import java.util.concurrent.TimeUnit
         }
     }
 
-    private fun startPlayerPositionUpdate(): Disposable {
+    private fun startPlayerPositionUpdate() {
+        println("DB startPlayerPositionUpdate start")
+        // Completable.fromObservable(, toOb
         val disposable = Observable.interval(1L, TimeUnit.SECONDS)
             .observeOn(AndroidSchedulers.mainThread())
             .map {
@@ -114,6 +117,9 @@ import java.util.concurrent.TimeUnit
                     durationMs = player.duration
                 )
             }
+            .doOnSubscribe { player.play() }
+            .doOnDispose { println("DB DISPOSE")
+                Handler(Looper.getMainLooper()).post { player.release() } }
             .subscribe({
                 println("DB new2")
                 _stateSubject.onNext(it)
@@ -121,11 +127,6 @@ import java.util.concurrent.TimeUnit
                 _stateSubject.onError(it)
             })
         compositeDisposable.add(disposable)
-        if (longDisposable1?.isDisposed == true) {
-            compositeDisposable.dispose()
-        }
-        println("DB startPlayerPositionUpdate end")
-        return disposable
     }
 
     override fun setPlayerView(surfaceView: SurfaceView): Completable =
@@ -140,8 +141,11 @@ import java.util.concurrent.TimeUnit
                 DefaultHttpDataSource.Factory()
             )
         }.flatMapCompletable { mediaSource ->
-            val completable1 = Completable.fromAction {
-                player.release()
+            // NOTE: it was changed to a single to avoid being repeated for 2 subscription
+            // we need a new subscription so that we can have a disposable and cancel the loop every second
+            // in startPlayerPositionUpdate
+            val completable1 = Single.fromCallable {
+                // player.release() // this can be useful to debug disposables
                 this.callbackOnVideoSizeChanged = callbackOnVideoSizeChanged
                 player.addAnalyticsListener(listener)
                 player.addAnalyticsListener(errorListener)
@@ -154,24 +158,23 @@ import java.util.concurrent.TimeUnit
                     // a wrapper class was used for the player to use seekTo with the missing command COMMAND_SEEK_IN_CURRENT_MEDIA_ITEM
                     player.seekTo(seekToPositionMs)
                 }
-                player.playWhenReady = true
+                player.playWhenReady = false
                 println("DB PLAYER SETUP")
-                compositeDisposable.add(startPlayerPositionUpdate())
+                startPlayerPositionUpdate()
             }.subscribeOn(AndroidSchedulers.mainThread())
-                .doOnDispose{ println("DB DISPOSE2") }
+            //    .doOnDispose { println("DB DISPOSE2") }
             val localDisposable1 = completable1.subscribe()
             localDisposable1?.let { compositeDisposable.add(it) }
             longDisposable1 = localDisposable1
             println("DB STEP 3")
-            completable1
+            Completable.complete()
         }
-            .doOnDispose{ println("DB DISPOSE4") }
+            .doOnDispose { println("DB DISPOSE4") }
             .andThen(_stateSubject)
             .subscribeOn(AndroidSchedulers.mainThread())
 
     override fun pause(): Completable {
         player.pause()
-        compositeDisposable.clear()
         return Completable.complete()
     }
 
@@ -204,8 +207,10 @@ import java.util.concurrent.TimeUnit
 
     override fun release(): Completable {
         println("DB EXO RELEASE")
-        player.playWhenReady = false
         compositeDisposable.dispose()
+        //player.playWhenReady = false
+        //player.pause()
+        //player.stop()
         player.release()
         return Completable.complete()
     }
