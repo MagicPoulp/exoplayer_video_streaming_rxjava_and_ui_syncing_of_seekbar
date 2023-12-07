@@ -11,6 +11,7 @@ import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import android.view.ViewGroup.MarginLayoutParams
+import android.widget.Button
 import android.widget.FrameLayout
 import android.widget.ImageView
 import android.widget.LinearLayout
@@ -133,6 +134,8 @@ class PlayerFragment : BaseFragment<MediaUi, FragmentPlayerBinding>() {
         }
     }
 
+    private var track = 8
+
     private fun updateMediaDetail(mediaDetail: MediaDetailShort, view: View?) {
         val mediaDetailContainer: ConstraintLayout? = view?.findViewById(R.id.media_detail_container)
         val mediaDetailTitle: TextView? = view?.findViewById(R.id.media_detail_title)
@@ -142,6 +145,22 @@ class PlayerFragment : BaseFragment<MediaUi, FragmentPlayerBinding>() {
         val mediaDetailSubtitle: TextView? = view?.findViewById(R.id.media_detail_subtitle)
         mediaDetailSubtitle?.let { mediaDetailSubtitle2 ->
             mediaDetailSubtitle2.text = mediaDetail.subtitle
+        }
+        // Question 1.6 Display a ui element in order to be able to select a distinct audio and text track from stream playlist
+        // we just made a prototype that can change between two tracks with a button
+        // we see visually that it works with the "Gear" text in the video
+        // we could make a more advanced component to pick multiple tracks among the 10 available tracks
+        // however, certain tracks crash the app, so we need to hard-code which track we want
+        val selectTracksButton: Button? = view?.findViewById(R.id.select_track)
+        selectTracksButton?.let { selectTracksButton2 ->
+            selectTracksButton2.setOnClickListener {
+                val trackType = 2
+                val trackGroup = 0
+                // Question 1.6 Display a ui element in order to be able to select a distinct audio and text track from stream playlist
+                // we can make it swap between track 8 (the initial one) and track 2
+                track = if (track == 8) 2 else 8
+                player?.pushAction(PlayerAction.SelectTrack(trackType, trackGroup, track))
+            }
         }
 
         val mediaDetailImage: ImageView? = view?.findViewById(R.id.media_detail_image)

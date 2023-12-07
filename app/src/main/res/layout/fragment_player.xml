@@ -6,6 +6,27 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent">
 
+    <Button
+        android:labelFor="@id/select_track"
+        android:id="@+id/select_track"
+        android:layout_marginStart="0dp"
+        android:layout_marginEnd="10dp"
+        android:layout_marginTop="10dp"
+        android:layout_marginBottom="0dp"
+        android:layout_width="60dp"
+        android:layout_height="40dp"
+        android:layout_gravity="center"
+        android:background="@drawable/round_button"
+        android:textSize="13sp"
+        android:textStyle="bold"
+        android:textColor="#ffffffff"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintTop_toTopOf="parent"
+        android:text="@string/select_track_short"
+        android:contentDescription="@string/select_track">
+
+    </Button>
+
     <androidx.constraintlayout.widget.ConstraintLayout
         android:background="@color/player_background"
         android:id="@+id/media_detail_container"

@@ -214,7 +214,7 @@ import java.util.concurrent.TimeUnit
 
     // https://exoplayer.dev/track-selection.html
     override fun selectTrack(trackType: Int, trackGroupIndex: Int, trackIndex: Int): Completable {
-        player.pause()
+        player.stop()
         val tracks = player.currentTracks
         if (trackGroupIndex >= tracks.groups.size) {
             return Completable.complete()
@@ -226,17 +226,21 @@ import java.util.concurrent.TimeUnit
             return Completable.complete()
         }
         val isTrackSupported = trackGroup.isTrackSupported(trackIndex)
-        val isTrackSelected = trackGroup.isTrackSelected(trackIndex)
-        if (isTrackSupported && !isTrackSelected) {
+        // Question 1.6 Display a ui element in order to be able to select a distinct audio and text track from stream playlist
+        // we can make it swap between track 8 (the initial one) and track 2
+        // we can select multiple tracks simultaneously, and set them all in a list in TrackSelectionOverride
+        // then it will be returned in selected
+        // val isTrackSelected = trackGroup.isTrackSelected(trackIndex)
+        if (isTrackSupported) {
             player.trackSelectionParameters = player.trackSelectionParameters
                 .buildUpon()
                 .setOverrideForType(
                     TrackSelectionOverride(
-                        trackGroup.mediaTrackGroup,
-                        0
+                        trackGroup.mediaTrackGroup, trackIndex
                     )
                 )
                 .build()
+            player.prepare()
             player.play()
             return Completable.complete()
         }
