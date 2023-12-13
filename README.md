@@ -1,8 +1,6 @@
-#Author
+# Author
 
 Thierry Vilmart
-
-# Date
 
 November 2023
 
