@@ -36,9 +36,9 @@ import java.util.concurrent.TimeUnit
 
     private val rendererFactory = DefaultRenderersFactory(context)
     // we use an adapter class because COMMAND_SEEK_IN_CURRENT_MEDIA_ITEM is missing for seekTo()
-    private val player: ExoPlayer = CustomExoPlayerImpl(ExoPlayer.Builder(context, rendererFactory)
+    private val player: ExoPlayer = ExoPlayer.Builder(context, rendererFactory)
         .setLooper(Looper.getMainLooper())
-        .build())
+        .build()
 
     private val _stateSubject: BehaviorSubject<PlayerState> = BehaviorSubject.create()
     internal val currentState: PlayerState
@@ -149,10 +149,9 @@ import java.util.concurrent.TimeUnit
                 player.setMediaSource(mediaSource)
                 player.prepare()
                 seekToPositionMs?.let {
-                    // we must use 2 parameters because we have COMMAND_SEEK_TO_MEDIA_ITEM but not COMMAND_SEEK_IN_CURRENT_MEDIA_ITEM
-                    // see the source code documentation for details
-                    // However, it enforces the first mediaItemIndex
-                    // a wrapper class was used for the player to use seekTo with the missing command COMMAND_SEEK_IN_CURRENT_MEDIA_ITEM
+                    // COMMAND_SEEK_IN_CURRENT_MEDIA_ITEM is missing before the player starts
+                    // but it still works to run seekTo here
+                    // After playing, the permission is added
                     player.seekTo(seekToPositionMs)
                 }
                 player.playWhenReady = false
