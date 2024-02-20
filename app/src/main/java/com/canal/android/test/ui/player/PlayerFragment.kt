@@ -53,6 +53,7 @@ class PlayerFragment : BaseFragment<MediaUi, FragmentPlayerBinding>() {
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
         activity.setFullScreen()
+        // onSaveInstanceState adds persistent saving that the ViewModel does not provide, in case the app is stopped by the system
         savedInstanceState?.getLong("previousPlayerPosition", 0)?.let { viewModel.postPlayerPositionState(
             PositionState(it, -1)
         ) }
@@ -259,6 +260,10 @@ class PlayerFragment : BaseFragment<MediaUi, FragmentPlayerBinding>() {
     // Using the state bundle is only for particular cases, and will not work if the app is closed, if the back button is pressed,
     // Side case, if the activity onRestart() is called with the device home button, the view is preserved, and our variable is kept in viewModel.mediaDetail
     // To always recover the position of the player no matter what, we should store this information persistently on the internal storage
+    //
+    // onSaveInstanceState adds persistent saving that the ViewModel does not provide, in case the app is stopped by the system
+    // according to the link below, both are complementary, and onSaveInstanceState should only save small UI state things
+    // https://medium.com/androiddevelopers/viewmodels-persistence-onsaveinstancestate-restoring-ui-state-and-loaders-fc7cc4a6c090#:~:text=ViewModels%20are%20not%20a%20replacement,that%20require%20lengthy%20serialization%2Fdeserialization.
     override fun onSaveInstanceState(outState: Bundle) {
         // API 28+ has onStop() after onSaveInstanceState(), otherwise it is before
         viewModel.playerPositionState.value?.position?.let {
